@@ -1,5 +1,7 @@
 package ast
 
+import "github.com/tokenapiguy/writing-an-interpreter-in-go/token"
+
 type Node interface {
 	TokenLiteral() string
 }
@@ -24,4 +26,25 @@ func (p *Program) TokenLiteral() string {
 	} else {
 		return ""
 	}
+}
+
+type LetStatement struct {
+	Token token.Token
+	Name  *Identifier
+	Value Expression
+}
+
+func (i *LetStatement) statementNode() {} // in go, interface implementation is implied assuming a type has all methods defined by that interface
+func (i *LetStatement) TokenLiteral() string {
+	return i.Token.Literal
+}
+
+type Identifier struct {
+	Token token.Token
+	Value string
+}
+
+func (i *Identifier) expressionNode() {}
+func (i *Identifier) TokenLiteral() string {
+	return i.Token.Literal
 }
