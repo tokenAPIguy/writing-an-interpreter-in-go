@@ -1,6 +1,8 @@
 package parser
 
 import (
+	"fmt"
+
 	"github.com/tokenapiguy/writing-an-interpreter-in-go/ast"
 	"github.com/tokenapiguy/writing-an-interpreter-in-go/lexer"
 	"github.com/tokenapiguy/writing-an-interpreter-in-go/token"
@@ -10,13 +12,26 @@ type Parser struct {
 	l         *lexer.Lexer
 	curToken  token.Token
 	peekToken token.Token
+	errors    []string
 }
 
 func New(l *lexer.Lexer) *Parser {
-	p := &Parser{l: l}
+	p := &Parser{
+		l:      l,
+		errors: []string{},
+	}
 	p.NextToken()
 	p.NextToken()
 	return p
+}
+
+func (p *Parser) Errors() []string {
+	return p.errors
+}
+
+func (p *Parser) PeekError(t token.TokenType) {
+	msg := fmt.Sprintf("expected next token to be %s, got %s instead", t, p.peekToken.Type)
+	p.errors = append(p.errors, msg)
 }
 
 func (p *Parser) NextToken() {
@@ -42,6 +57,8 @@ func (p *Parser) parseStatement() ast.Statement {
 	switch p.curToken.Type {
 	case token.LET:
 		return p.parseLetStatement()
+	case token.RETURN:
+		return p.parseReturnStatement()
 	default:
 		return nil
 	}
@@ -61,6 +78,19 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 	}
 
 	//TODO: We're skipping the expressions until we encounter a semicolon
+	for !p.curTokenIs(token.SEMICOLON) {
+		p.NextToken()
+	}
+
+	return stmt
+}
+
+func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
+	stmt := &ast.ReturnStatement{Token: p.curToken}
+
+	p.NextToken()
+
+	// TODO: We're skipping the expressions until we encounter a semicolor
 	for !p.curTokenIs(token.SEMICOLON) {
 		p.NextToken()
 	}
